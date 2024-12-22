@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      # Mount the index directory
+      - ./index:/app/index
+      # Mount the model file
+      - ./xgb_model.pkl:/app/xgb_model.pkl
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=search_engine.settings
+    command: python manage.py runserver 0.0.0.0:8000

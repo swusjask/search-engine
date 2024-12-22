@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <link rel="stylesheet" href="{% static 'css/document.css' %}">
+</head>
+<body>
+    <div class="document-container">
+        <nav class="navigation">
+            <a href="{% url 'search_app:search' %}" class="back-link">← Back to Search</a>
+        </nav>
+        
+        <div class="document-content">
+            <header class="document-header">
+                <h1>Document #{{ document.docno }}</h1>
+            </header>
+            
+            <article class="document-body">
+                <div class="document-text">
+                    {{ document.text|linebreaks }}
+                </div>
+            </article>
+        </div>
+    </div>
+</body>
+</html>

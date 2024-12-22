@@ -1,0 +1,7 @@
+django==4.2.7
+python-terrier
+scikit-learn
+xgboost
+numpy
+pandas
+python-dotenv
