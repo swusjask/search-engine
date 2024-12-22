@@ -19,8 +19,8 @@ A search engine implementation using PyTerrier for information retrieval and Dja
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/search-engine-ir.git
-cd search-engine-ir
+git clone https://github.com/swusjask/search-engine.git
+cd search-engine
 ```
 
 2. Build and run with Docker:
