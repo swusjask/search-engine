@@ -6,7 +6,6 @@ A search engine implementation using PyTerrier for information retrieval and Dja
 
 - Full-text search using PyTerrier
 - Learning-to-rank implementation for better search results
-- Clean and responsive web interface
 - Document viewing functionality
 - Docker support for easy deployment
 
@@ -30,22 +29,6 @@ docker-compose up --build
 ```
 
 The application will be available at http://localhost:8000
-
-## Project Structure
-
-```
-search_engine/
-├── search_app/            # Django app directory
-│   ├── templates/        # HTML templates
-│   ├── views.py         # View functions
-│   └── urls.py          # URL configurations
-├── static/               # Static files
-│   ├── css/            # Stylesheets
-│   └── js/             # JavaScript files
-├── docker-compose.yml    # Docker compose configuration
-├── Dockerfile           # Docker configuration
-└── requirements.txt      # Python dependencies
-```
 
 ## Development
 
