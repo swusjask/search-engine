@@ -42,13 +42,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             title="View full document">
                                 Result #${index + 1}
                             </a>
+                            <p>Document #${result.docid}</p>
                         </div>
                         <p class="result-text">${result.text}</p>
-                        <div class="result-meta">
-                            <span class="relevance-score">
-                                Relevance Score: ${parseFloat(result.score).toFixed(4)}
-                            </span>
-                        </div>
                     `;
                     resultsDiv.appendChild(resultDiv);
                 });

@@ -19,10 +19,12 @@ if not pt.started():
 index_dir = os.path.join(os.getcwd(), "index")
 index_ref = pt.IndexFactory.of(index_dir)
 
+# Retrievers (for reranker)
 tfidf = pt.terrier.Retriever(index_ref, wmodel="TF_IDF")
 pl2 = pt.terrier.Retriever(index_ref, wmodel="PL2")
 bb2 = pt.terrier.Retriever(index_ref, wmodel="BB2")
 
+# Preprocessing corpus
 def remove_nonalphanum(text):
   pattern = re.compile('[\W_]+')
   return pattern.sub(' ', text)
@@ -38,6 +40,8 @@ collections["docno"] = collections["docno"].astype(str)
 
 tfidf_vectorizer = TfidfVectorizer()
 tfidf_vectorizer.fit(collections["text"])
+
+# Features for reranker
 
 def cosine_similarity_feature(doc, query):
     doc_vector = tfidf_vectorizer.transform([doc])
@@ -84,13 +88,12 @@ def search_view(request):
 
         try:
             # Get search results using lmart_pipe
-            results = lmart_pipe.search(query)
+            results = lmart_pipe.search(query).head(K)
             # Convert DataFrame to list of dictionaries with selected fields
             results_list = results.apply(lambda x: {
                 'docid': str(x['docid']),
                 'docno': str(x['docno']),
                 'text': str(x['text']),
-                'score': float(x['score']),
                 'rank': int(x['rank'])
             }, axis=1).tolist()
 
@@ -130,7 +133,6 @@ def document_view(request, doc_id):
         document = {
             'docno': doc_id,
             'text': doc_content,
-            # You can add more fields here if needed
         }
 
         return render(request, 'document.html', {
