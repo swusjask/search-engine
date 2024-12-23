@@ -1,4 +1,7 @@
+import os
 import pickle
+import re
+import pandas as pd
 import pyterrier as pt
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
@@ -8,29 +11,50 @@ import numpy as np
 
 # Initialize PyTerrier and load the model (do this once when the app starts)
 if not pt.started():
-    pt.init(version='snapshot')
+    pt.init()
 
 # Load the index
-index_ref = pt.IndexRef.of("./index/data.properties")
+index_dir = os.path.join(os.getcwd(), "index")
+index_ref = pt.IndexFactory.of(index_dir)
 
-def jaccard(doc, query):
-    doc_tokens = set(doc.split())
-    query_tokens = set(query.split())
-    intersection = len(doc_tokens.intersection(query_tokens))
-    union = len(doc_tokens.union(query_tokens))
-    return intersection / union if union != 0 else 0
+tfidf = pt.terrier.Retriever(index_ref, wmodel="TF_IDF")
+pl2 = pt.terrier.Retriever(index_ref, wmodel="PL2")
+bb2 = pt.terrier.Retriever(index_ref, wmodel="BB2")
 
-def tfidf_sim(doc, query):
-    vectorizer = TfidfVectorizer().fit_transform([doc, query])
-    vectors = vectorizer.toarray()
-    cos_sim = cosine_similarity(vectors)
-    return cos_sim[0, 1]
+def remove_nonalphanum(text):
+  pattern = re.compile('[\W_]+')
+  return pattern.sub(' ', text)
+
+def lowercast(text):
+  return text.lower()
+
+collections = pd.read_csv("corpus.csv")
+collections = collections.rename(columns={'id':'docno'})
+collections['text'] = collections['text'].apply(remove_nonalphanum)
+collections['text'] = collections['text'].apply(lowercast)
+collections["docno"] = collections["docno"].astype(str)
+
+tfidf_vectorizer = TfidfVectorizer()
+tfidf_vectorizer.fit(collections["text"])
+
+def cosine_similarity_feature(doc, query):
+    doc_vector = tfidf_vectorizer.transform([doc])
+    query_vector = tfidf_vectorizer.transform([query])
+    return cosine_similarity(doc_vector, query_vector)[0][0]
+
+def length_ratio_feature(doc, query):
+    doc_length = len(doc.split())
+    query_length = len(query.split())
+    return doc_length / query_length if query_length > 0 else 0
 
 def generate_features(doc, query):
-    return np.array([
-        jaccard(doc, query),
-        tfidf_sim(doc, query)
-    ])
+    features = [
+        cosine_similarity_feature(doc, query),
+        length_ratio_feature(doc, query)
+    ]
+    return np.array(features)
+
+features = pt.apply.doc_features(lambda row: generate_features(row["text"], row["query"]))
 
 # Load the model and create pipeline (do this once when the app starts)
 with open('xgb_model.pkl', 'rb') as f:
@@ -40,7 +64,7 @@ bm25 = pt.BatchRetrieve(index_ref, wmodel="BM25")
 features = pt.apply.doc_features(lambda row: generate_features(row["text"], row["query"]))
 K = 30
 
-pipeline = (bm25 % K) >> pt.text.get_text(index_ref, "text") >> (features ** bm25)
+pipeline = bm25 >> pt.text.get_text(index_ref, "text") >> (features ** bm25 ** tfidf ** pl2 ** bb2)
 lmart_pipe = pipeline >> pt.ltr.apply_learned_model(xgb_model, form="ltr")
 
 def search_view(request):
