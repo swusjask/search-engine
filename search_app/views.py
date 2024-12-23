@@ -1,6 +1,8 @@
 import os
 import pickle
 import re
+import traceback
+
 import pandas as pd
 import pyterrier as pt
 from django.shortcuts import render
@@ -71,38 +73,39 @@ def search_view(request):
     # Handle POST request (search query)
     if request.method == 'POST':
         query = request.POST.get('query', '')
-        
+        query = lowercast(remove_nonalphanum(query))
+
         if not query:
             return JsonResponse({
                 'status': 'error',
                 'message': 'No query provided',
                 'results': []
             })
-            
+
         try:
             # Get search results using lmart_pipe
             results = lmart_pipe.search(query)
-            
             # Convert DataFrame to list of dictionaries with selected fields
             results_list = results.apply(lambda x: {
+                'docid': str(x['docid']),
                 'docno': str(x['docno']),
                 'text': str(x['text']),
                 'score': float(x['score']),
                 'rank': int(x['rank'])
             }, axis=1).tolist()
-            
+
             # Return JSON response with results
             return JsonResponse({
                 'status': 'success',
                 'query': query,
                 'results': results_list
             })
-            
+
         except Exception as e:
             # Log the full error for debugging
             print(f"Search error: {str(e)}")
             print(traceback.format_exc())
-            
+
             # Return error response
             return JsonResponse({
                 'status': 'error',
@@ -110,7 +113,7 @@ def search_view(request):
                 'query': query,
                 'results': []
             }, status=500)
-    
+
     # Handle GET request (initial page load)
     return render(request, 'search.html')
 
@@ -118,8 +121,8 @@ def document_view(request, doc_id):
     try:
         # Using the same index_ref from the search view
         # Get the document metadata and content
-        doc_content = index_ref.getMetaIndex().getItem("text", doc_id)
-        
+        doc_content = index_ref.getMetaIndex().getItem("text", int(doc_id))
+
         if not doc_content:
             raise Http404("Document not found")
 
@@ -129,12 +132,12 @@ def document_view(request, doc_id):
             'text': doc_content,
             # You can add more fields here if needed
         }
-        
+
         return render(request, 'document.html', {
             'document': document,
             'title': f'Document #{doc_id}'
         })
-        
+
     except Exception as e:
         print(f"Error retrieving document: {str(e)}")
         raise Http404(f"Error retrieving document: {str(e)}")

@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     resultDiv.className = 'result-item';
                     resultDiv.innerHTML = `
                         <div class="result-title">
-                            <a href="/search/doc/${result.docno}" 
+                            <a href="/search/doc/${result.docid}" 
                             class="title-link" 
                             title="View full document">
                                 Result #${index + 1}
