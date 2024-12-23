@@ -37,18 +37,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     resultDiv.className = 'result-item';
                     resultDiv.innerHTML = `
                         <div class="result-title">
-                            <a href="/search/doc/${result.docno}" 
+                            <a href="/search/doc/${result.docid}" 
                             class="title-link" 
                             title="View full document">
                                 Result #${index + 1}
                             </a>
+                            <p>Document #${result.docid}</p>
                         </div>
                         <p class="result-text">${result.text}</p>
-                        <div class="result-meta">
-                            <span class="relevance-score">
-                                Relevance Score: ${parseFloat(result.score).toFixed(4)}
-                            </span>
-                        </div>
                     `;
                     resultsDiv.appendChild(resultDiv);
                 });
